@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Dedupe Tabs",
+  "version": "1.0.0",
+  "description": "Automatically switches to existing tabs instead of creating duplicates",
+  "permissions": [
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
+
