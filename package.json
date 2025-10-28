@@ -1,0 +1,20 @@
+{
+  "name": "dedupe-tabs",
+  "version": "1.0.0",
+  "description": "A Chrome extension to deduplicate tabs.",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc",
+    "clean": "rm *.js *.js.map *.d.ts *.d.ts.map",
+    "watch": "tsc --watch",
+    "open-chrome": "open -a 'Google Chrome' chrome://extensions/"
+  },
+  "author": "Martin Probst",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^30.2.0"
+  },
+  "dependencies": {
+    "@types/chrome": "^0.1.27"
+  }
+}
