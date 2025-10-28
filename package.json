@@ -7,7 +7,8 @@
     "build": "tsc",
     "clean": "rm *.js *.js.map *.d.ts *.d.ts.map",
     "watch": "tsc --watch",
-    "open-chrome": "open -a 'Google Chrome' chrome://extensions/"
+    "open-chrome": "open -a 'Google Chrome' chrome://extensions/",
+    "bundle": "npm run build && zip -r dedupe-tabs.zip manifest.json background.js background.js.map icon16.png icon48.png icon128.png README.md"
   },
   "author": "Martin Probst",
   "license": "MIT",
