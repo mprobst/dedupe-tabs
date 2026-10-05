@@ -1,5 +1,7 @@
 # <img src="icon128.png" width="48" height="48" alt="" align="top"> Dedupe Tabs Chrome Extension
 
+[![CI](https://github.com/mprobst/dedupe-tabs/actions/workflows/ci.yml/badge.svg)](https://github.com/mprobst/dedupe-tabs/actions/workflows/ci.yml)
+
 A Chrome extension that automatically prevents duplicate tabs by switching to existing tabs when you try to open a URL that's already open.
 
 There are a number of Chrome Extensions that have similar functionality. However some don't work, and others request permissions that are too wide (browsing history suffices).
@@ -41,7 +43,7 @@ Requires Node.js 24 (see `.nvmrc`). Run `npm install` first.
 ### Releasing
 
 `npm run release -- <patch|minor|major>` releases a new version from an
-up-to-date `main`. It runs `npm run check`, bumps the version in
+up-to-date `main` whose CI run has passed. It runs `npm run check`, bumps the version in
 `manifest.json` and `package.json`, builds the zip, commits and tags
 `vX.Y.Z` with the commit subjects since the last release as notes, pushes,
 creates a GitHub release with the zip, and uploads the zip to the Chrome Web
@@ -84,8 +86,7 @@ Test](https://playwright.dev) in a real Chromium (Playwright's build;
 `npx playwright install chromium` downloads it, or set `CHROME_PATH`), with a
 local web server and a small driver extension (`test/driver-ext`). They need an
 X display on which window focus works (headless Chromium reports every window
-as focused) and `xdotool`: `sudo apt install xvfb xdotool`, then
-`xvfb-run -a npm run test:e2e`. Set `EXT_DIR` to run them against a different
+as focused): `sudo apt install xvfb`, then `xvfb-run -a npm run test:e2e`. Set `EXT_DIR` to run them against a different
 build. On failure, the report (`npx playwright show-report`) has the
 extension's console output and the final tab state attached.
 
