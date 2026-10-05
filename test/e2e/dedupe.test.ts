@@ -299,7 +299,8 @@ test.describe('dedupe-tabs', () => {
     await b.open(url('/a'));
     await expectPages([url('/a'), url('/b')]);
     // Discarding replaces the tab ID with a new one.
-    const [a] = (await b.tabs()).filter((t) => t.url === url('/a'));
+    const a = (await b.tabs()).find((t) => t.url === url('/a'));
+    if (!a) throw new Error('the discarded tab is gone');
     await b.expectCurrent({ tabId: a.id });
   });
 });

@@ -162,3 +162,5 @@ chrome.tabs.onReplaced.addListener(async (addedTabId, removedTabId) => {
 });
 
 console.log('Dedupe Tabs extension loaded');
+
+export {};
