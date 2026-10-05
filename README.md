@@ -16,6 +16,7 @@ There are a number of Chrome Extensions that have similar functionality. However
 ## Installation
 
 1. Build the extension:
+
    ```bash
    npm install
    npm run build

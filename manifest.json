@@ -3,10 +3,7 @@
   "name": "Dedupe Tabs",
   "version": "1.0.0",
   "description": "Automatically switches to existing tabs instead of creating duplicates",
-  "permissions": [
-    "tabs",
-    "storage"
-  ],
+  "permissions": ["tabs", "storage"],
   "background": {
     "service_worker": "background.js",
     "type": "module"

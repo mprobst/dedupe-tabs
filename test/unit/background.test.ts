@@ -20,7 +20,7 @@ const MODULE_URL = process.env.BACKGROUND
 // are collected, and fail the test.
 const consoleError = console.error;
 let errorSink: unknown[][] = [];
-if (!process.env.DEBUG) console.log = () => { };
+if (!process.env.DEBUG) console.log = () => {};
 console.error = (...args: unknown[]) => {
   // Node's own warnings (e.g. about the missing "type" in package.json) are not the extension's.
   if (String(args[0]).includes('MODULE_TYPELESS_PACKAGE_JSON')) return;
@@ -67,7 +67,10 @@ describe('background', () => {
 
   /** Sorted URLs of the tabs in a window. */
   function urlsIn(windowId: number) {
-    return fake.tabsOf(windowId).map(t => t.url).sort();
+    return fake
+      .tabsOf(windowId)
+      .map((t) => t.url)
+      .sort();
   }
 
   describe('basic', () => {
@@ -115,7 +118,10 @@ describe('background', () => {
       fake.createWindow({ urls: ['https://example.com/search/abc'] });
       await start();
       await open('https://example.com/search/a*');
-      assert.deepEqual(fake.urls(), ['https://example.com/search/a*', 'https://example.com/search/abc']);
+      assert.deepEqual(fake.urls(), [
+        'https://example.com/search/a*',
+        'https://example.com/search/abc',
+      ]);
     });
 
     test('a URL with "*" matches only itself, not other URLs', async () => {
@@ -123,7 +129,10 @@ describe('background', () => {
       await start();
       await open('https://example.com/search/abc'); // not a duplicate
       await open('https://example.com/search/a*'); // a duplicate
-      assert.deepEqual(fake.urls(), ['https://example.com/search/a*', 'https://example.com/search/abc']);
+      assert.deepEqual(fake.urls(), [
+        'https://example.com/search/a*',
+        'https://example.com/search/abc',
+      ]);
     });
 
     test('local files are deduplicated', async () => {
@@ -362,7 +371,7 @@ describe('background', () => {
     test('a tab that existed before the extension started is kept when it navigates', async () => {
       fake.createWindow({ urls: [A, B] });
       await start();
-      const tab = fake.tabs.find(t => t.url === B)!.id;
+      const tab = fake.tabs.find((t) => t.url === B)!.id;
       fake.navigate(tab, A);
       await fake.settle();
       assert.deepEqual(fake.urls(), [A, A]);
@@ -475,7 +484,13 @@ describe('background', () => {
   });
 
   describe('ignored URLs', () => {
-    const ignored = ['chrome://settings/', 'about:blank', 'data:text/html,hello', 'chrome-extension://abcdef/page.html', NTP];
+    const ignored = [
+      'chrome://settings/',
+      'about:blank',
+      'data:text/html,hello',
+      'chrome-extension://abcdef/page.html',
+      NTP,
+    ];
     for (const url of ignored) {
       test(`${url} is never deduplicated`, async () => {
         const w = fake.createWindow({ urls: [url] });
@@ -551,8 +566,11 @@ describe('background', () => {
         await fake.settle();
       }
       // Only the new tab pages are fresh.
-      const ntps = fake.tabs.filter(t => t.url === NTP).map(t => t.id);
-      assert.deepEqual(storedFresh().sort((a, b) => a - b), ntps);
+      const ntps = fake.tabs.filter((t) => t.url === NTP).map((t) => t.id);
+      assert.deepEqual(
+        storedFresh().sort((a, b) => a - b),
+        ntps,
+      );
       for (const id of ntps) fake.closeTab(id);
       await fake.settle();
       assert.deepEqual(storedFresh(), []);

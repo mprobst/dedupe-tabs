@@ -89,9 +89,17 @@ export const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
  * nothing for "the extension leaves this alone" checks (it may not have acted
  * yet) and misses overshooting (e.g. switching one tab too far).
  */
-export async function expectToSettle(fn: () => Promise<unknown>, expected: unknown, options: SettleOptions) {
+export async function expectToSettle(
+  fn: () => Promise<unknown>,
+  expected: unknown,
+  options: SettleOptions,
+) {
   // A boxed step reports failures at the caller's line, not in here.
-  await base.step(`expect ${options.message} to settle`, () => settleAndHold(fn, expected, options), { box: true });
+  await base.step(
+    `expect ${options.message} to settle`,
+    () => settleAndHold(fn, expected, options),
+    { box: true },
+  );
 }
 
 type SettleOptions = { message: string; stableFor?: number; timeout?: number };
@@ -130,7 +138,13 @@ export function extensionTest(targetScript: string) {
 }
 
 export class Browser {
-  static async launch({ extDir = EXT_DIR, targetScript }: { extDir?: string; targetScript: string }): Promise<Browser> {
+  static async launch({
+    extDir = EXT_DIR,
+    targetScript,
+  }: {
+    extDir?: string;
+    targetScript: string;
+  }): Promise<Browser> {
     const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ext-e2e-'));
     const extensions = `${extDir},${DRIVER_DIR}`;
     const ctx = await chromium.launchPersistentContext(userDataDir, {
@@ -174,12 +188,16 @@ export class Browser {
     this.targetScript = targetScript;
     ctx.on('console', (m) => {
       const url = m.location().url;
-      if (url.startsWith('chrome-extension://')) this.logs.push(`[${m.type()}] ${path.basename(url)}: ${m.text()}`);
+      if (url.startsWith('chrome-extension://'))
+        this.logs.push(`[${m.type()}] ${path.basename(url)}: ${m.text()}`);
     });
   }
 
   async init() {
-    this.driver = await this.serviceWorker((w) => w.url().endsWith('/driver.js'), 'the test driver extension');
+    this.driver = await this.serviceWorker(
+      (w) => w.url().endsWith('/driver.js'),
+      'the test driver extension',
+    );
     const page = this.ctx.pages()[0];
     this.cdp = await this.ctx.newCDPSession(page);
     this.cdp.on('ServiceWorker.workerVersionUpdated', (e) => {
@@ -193,9 +211,11 @@ export class Browser {
       })
       .toBe('running');
     // The browser's initial window and tab; let the extension see them.
-    await expect.poll(() => this.current(), { message: 'the initial window has focus' }).toMatchObject({
-      windowId: expect.any(Number),
-    });
+    await expect
+      .poll(() => this.current(), { message: 'the initial window has focus' })
+      .toMatchObject({
+        windowId: expect.any(Number),
+      });
     await this.waitForHandlers();
   }
 
@@ -252,12 +272,21 @@ export class Browser {
 
   /** Attaches the extensions' console output and the tab and window state to the test report. */
   async attachDiagnostics(testInfo: TestInfo) {
-    await testInfo.attach('extension console', { body: this.logs.join('\n'), contentType: 'text/plain' });
+    await testInfo.attach('extension console', {
+      body: this.logs.join('\n'),
+      contentType: 'text/plain',
+    });
     try {
       const windows = await this.drv(() => chrome.windows.getAll({ populate: true }));
-      await testInfo.attach('windows', { body: JSON.stringify(windows, null, 2), contentType: 'application/json' });
+      await testInfo.attach('windows', {
+        body: JSON.stringify(windows, null, 2),
+        contentType: 'application/json',
+      });
     } catch (e) {
-      await testInfo.attach('windows', { body: `could not query windows: ${e}`, contentType: 'text/plain' });
+      await testInfo.attach('windows', {
+        body: `could not query windows: ${e}`,
+        contentType: 'text/plain',
+      });
     }
   }
 
@@ -274,14 +303,23 @@ export class Browser {
     { type = 'normal', focused = true }: { type?: 'normal' | 'popup'; focused?: boolean } = {},
   ): Promise<NewWindow> {
     const w = await this.drv(
-      async ({ n, type, focused }: { n: number; type: 'normal' | 'popup'; focused: boolean }): Promise<NewWindow> => {
+      async ({
+        n,
+        type,
+        focused,
+      }: {
+        n: number;
+        type: 'normal' | 'popup';
+        focused: boolean;
+      }): Promise<NewWindow> => {
         const urls = Array.from({ length: n }, (_, i) => `data:text/html,tab${i}`);
         const w = await chrome.windows.create({ url: urls, type, focused });
         return { windowId: w!.id!, tabIds: w!.tabs!.map((t) => t.id!) };
       },
       { n, type, focused },
     );
-    if (focused) await this.reached({ windowId: w.windowId }, `new ${type} window ${w.windowId} has focus`);
+    if (focused)
+      await this.reached({ windowId: w.windowId }, `new ${type} window ${w.windowId} has focus`);
     return w;
   }
 
@@ -311,24 +349,45 @@ export class Browser {
   }
 
   async focusWindow(windowId: number) {
-    await this.drv((windowId: number) => chrome.windows.update(windowId, { focused: true }), windowId);
+    await this.drv(
+      (windowId: number) => chrome.windows.update(windowId, { focused: true }),
+      windowId,
+    );
     await this.reached({ windowId }, `window ${windowId} has focus`);
   }
 
   async closeTab(tabId: number) {
     await this.drv((tabId: number) => chrome.tabs.remove(tabId), tabId);
     await expect
-      .poll(() => this.drv(async (id: number) => (await chrome.tabs.query({})).some((t) => t.id === id), tabId), {
-        message: `tab ${tabId} is closed`,
-      })
+      .poll(
+        () =>
+          this.drv(
+            async (id: number) => (await chrome.tabs.query({})).some((t) => t.id === id),
+            tabId,
+          ),
+        {
+          message: `tab ${tabId} is closed`,
+        },
+      )
       .toBe(false);
     await this.waitForHandlers();
   }
 
   /** Opens `url` in a new tab, like a link opened in a new tab. Returns the tab ID. */
-  async open(url: string, { windowId, active = true }: { windowId?: number; active?: boolean } = {}): Promise<number> {
+  async open(
+    url: string,
+    { windowId, active = true }: { windowId?: number; active?: boolean } = {},
+  ): Promise<number> {
     return this.drv(
-      async ({ url, windowId, active }: { url: string; windowId: number | null; active: boolean }) =>
+      async ({
+        url,
+        windowId,
+        active,
+      }: {
+        url: string;
+        windowId: number | null;
+        active: boolean;
+      }) =>
         (await chrome.tabs.create({ url, active, ...(windowId === null ? {} : { windowId }) })).id!,
       { url, windowId: windowId ?? null, active },
     );
@@ -339,7 +398,12 @@ export class Browser {
     return this.drv(async (): Promise<TabInfo[]> => {
       const tabs = await chrome.tabs.query({});
       return tabs
-        .map((t) => ({ id: t.id!, windowId: t.windowId, url: t.pendingUrl || t.url || '', active: t.active }))
+        .map((t) => ({
+          id: t.id!,
+          windowId: t.windowId,
+          url: t.pendingUrl || t.url || '',
+          active: t.active,
+        }))
         .sort((a, b) => a.id - b.id);
     });
   }
@@ -359,7 +423,8 @@ export class Browser {
     return this.drv(async (): Promise<Current> => {
       const wins = await chrome.windows.getAll({ populate: true });
       const focused = wins.filter((w) => w.focused);
-      if (focused.length !== 1) return { windowId: null, tabId: null, focusedCount: focused.length };
+      if (focused.length !== 1)
+        return { windowId: null, tabId: null, focusedCount: focused.length };
       const tab = focused[0].tabs?.find((t) => t.active);
       return { windowId: focused[0].id!, tabId: tab?.id ?? null };
     });
