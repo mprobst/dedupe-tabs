@@ -15,7 +15,7 @@ export type TestServer = {
   /** The server's origin, e.g. `http://127.0.0.1:1234`. */
   base: string;
   /** The absolute URL of `path` (including any query or fragment) on this server. */
-  url(path: string): string;
+  url: (path: string) => string;
   close(): Promise<void>;
 };
 

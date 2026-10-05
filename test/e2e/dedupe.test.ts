@@ -300,6 +300,6 @@ test.describe('dedupe-tabs', () => {
     await expectPages([url('/a'), url('/b')]);
     // Discarding replaces the tab ID with a new one.
     const [a] = (await b.tabs()).filter((t) => t.url === url('/a'));
-    await b.expectCurrent({ tabId: a!.id });
+    await b.expectCurrent({ tabId: a.id });
   });
 });

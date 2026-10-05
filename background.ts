@@ -38,7 +38,10 @@ const loadFresh: Promise<void> = (async () => {
   // Closed tabs are removed by onRemoved, which wakes the worker if needed.
   // Don't prune tabs that no longer exist here: if onReplaced woke the worker,
   // the replaced tab is already gone, but its entry must be carried over.
-  freshTabIds = new Set(Array.isArray(stored['fresh']) ? stored['fresh'] : []);
+  const loaded: unknown = stored['fresh'];
+  freshTabIds = new Set(
+    Array.isArray(loaded) ? loaded.filter((id): id is TabId => typeof id === 'number') : [],
+  );
 })();
 
 function setFresh(tabId: TabId, isFresh: boolean) {
