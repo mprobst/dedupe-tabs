@@ -3,4 +3,7 @@ node_modules/
 *.js.map
 *.d.ts
 *.d.ts.map
+!test/driver-ext/driver.js
 dedupe-tabs.zip
+test-results
+playwright-report

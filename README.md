@@ -57,6 +57,16 @@ so there is no build step for tests.
 `npm test` runs unit tests (`node --test`) against an in-memory fake of the
 Chrome APIs.
 
+`npm run test:e2e` runs end-to-end tests with [Playwright
+Test](https://playwright.dev) in a real Chromium (Playwright's build;
+`npx playwright install chromium` downloads it, or set `CHROME_PATH`), with a
+local web server and a small driver extension (`test/driver-ext`). They need an
+X display on which window focus works (headless Chromium reports every window
+as focused) and `xdotool`: `sudo apt install xvfb xdotool`, then
+`xvfb-run -a npm run test:e2e`. Set `EXT_DIR` to run them against a different
+build. On failure, the report (`npx playwright show-report`) has the
+extension's console output and the final tab state attached.
+
 ## Note on Icons
 
 The manifest references icon files (icon16.png, icon48.png, icon128.png) that you can create or the extension will use Chrome's default icon if they're missing.

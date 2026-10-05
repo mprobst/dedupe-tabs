@@ -10,11 +10,13 @@
     "clean": "rm *.js *.js.map *.d.ts *.d.ts.map",
     "watch": "tsc --watch",
     "open-chrome": "open -a 'Google Chrome' chrome://extensions/",
-    "bundle": "npm run build && zip -r dedupe-tabs.zip manifest.json background.js background.js.map icon16.png icon48.png icon128.png README.md"
+    "bundle": "npm run build && zip -r dedupe-tabs.zip manifest.json background.js background.js.map icon16.png icon48.png icon128.png README.md",
+    "test:e2e": "tsc && tsc -p test && playwright test"
   },
   "author": "Martin Probst",
   "license": "MIT",
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@types/node": "^24",
     "typescript": "^5.9.3"
   },
