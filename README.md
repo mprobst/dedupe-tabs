@@ -6,11 +6,12 @@ There are a number of Chrome Extensions that have similar functionality. However
 
 ## Features
 
-- **Automatic Deduplication**: When you create a new tab or navigate to a URL that's already open, the extension automatically switches to the existing tab and closes the duplicate.
-- **Smart Detection**: Works when:
-  - Opening a new tab with a URL
-  - Creating a new window with a URL that already exists in another tab/window
-- **Non-intrusive**: Ignores Chrome internal URLs (chrome://, chrome-extension://) and about:blank
+- **Automatic Deduplication**: When a new tab is about to show a page that's already open, the extension switches to the existing tab and closes the new one. This covers:
+  - links opened in a new tab or window, and URLs opened from other applications
+  - typing a URL into a new tab
+  - pages that open a blank window and then navigate it, and redirects
+- **Safe**: Tabs that already showed a page are never closed, so navigating within a tab never loses its history. Popup windows and installed web apps are left alone, and so are the other tabs of a new or restored window. Incognito tabs are only compared with incognito tabs.
+- **Non-intrusive**: Only web pages (http, https) and local files are deduplicated, compared by their exact URL (including any `#fragment`).
 
 ## Installation
 
@@ -29,22 +30,32 @@ There are a number of Chrome Extensions that have similar functionality. However
 ## Development
 
 - **Build once**: `npm run build`
+- **Bundle for the Chrome Web Store**: `npm run bundle`
 - **Watch mode**: `npm run watch` (automatically rebuilds on file changes)
 
 ## How It Works
 
-The extension listens to three Chrome events:
+The extension listens to `chrome.tabs.onCreated` and `chrome.tabs.onUpdated`.
+A tab counts as new from its creation until its first web page has finished
+loading; while it is new, every URL it is about to show is checked against all
+other tabs in normal windows. When a duplicate is found, the extension:
 
-1. `chrome.windows.onCreated`: When a new window is created, it checks all tabs in that window for duplicates
-2. `chrome.tabs.onCreated`: When a new tab is created, it checks if any existing tab has the same URL
-3. `chrome.tabs.onUpdated`: When a tab's URL changes, it checks if any other tab already has that URL
-
-When a duplicate is found, the extension:
-1. Switches to the existing tab
+1. Switches to the existing tab (preferring one in the same window)
 2. Focuses the window containing that tab
 3. Closes the duplicate tab
 
-This ensures that you never have multiple tabs open with the same URL, even across different windows!
+The list of new tabs lives in `chrome.storage.session` (hence the "storage"
+permission), so it survives the service worker being suspended while, say, a
+new tab page waits for input.
+
+## Tests
+
+The tests are written in TypeScript. `npm run typecheck` type-checks the
+extension and the tests. Unit tests run directly under Node (type stripping),
+so there is no build step for tests.
+
+`npm test` runs unit tests (`node --test`) against an in-memory fake of the
+Chrome APIs.
 
 ## Note on Icons
 

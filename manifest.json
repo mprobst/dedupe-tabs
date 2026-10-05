@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "Automatically switches to existing tabs instead of creating duplicates",
   "permissions": [
-    "tabs"
+    "tabs",
+    "storage"
   ],
   "background": {
     "service_worker": "background.js",
@@ -16,4 +17,3 @@
     "128": "icon128.png"
   }
 }
-
