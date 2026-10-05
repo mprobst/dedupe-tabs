@@ -7,3 +7,4 @@ node_modules/
 dedupe-tabs.zip
 test-results
 playwright-report
+.env
