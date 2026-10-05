@@ -1,4 +1,4 @@
-# Dedupe Tabs Chrome Extension
+# <img src="icon128.png" width="48" height="48" alt="" align="top"> Dedupe Tabs Chrome Extension
 
 A Chrome extension that automatically prevents duplicate tabs by switching to existing tabs when you try to open a URL that's already open.
 
@@ -30,9 +30,13 @@ There are a number of Chrome Extensions that have similar functionality. However
 
 ## Development
 
+Requires Node.js 24 (see `.nvmrc`). Run `npm install` first.
+
 - **Build once**: `npm run build`
-- **Bundle for the Chrome Web Store**: `npm run bundle`
 - **Watch mode**: `npm run watch` (automatically rebuilds on file changes)
+- **Bundle for the Chrome Web Store**: `npm run bundle` (creates `dedupe-tabs.zip`)
+- **Check everything**: `npm run check` runs the formatting check, linting, type checks and unit tests; it should pass before a commit.
+- **Format**: `npm run format` formats all files with [Prettier](https://prettier.io); `npm run lint` runs [ESLint](https://eslint.org) with typescript-eslint.
 
 ## How It Works
 
@@ -74,4 +78,4 @@ The manifest references icon files (icon16.png, icon48.png, icon128.png) that yo
 
 ## License
 
-MIT
+[MIT](LICENSE)

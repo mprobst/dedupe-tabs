@@ -62,7 +62,8 @@ describe('background', () => {
 
   /** The IDs stored as "fresh" in session storage. */
   function storedFresh(): number[] {
-    return fake.storage.session.data.fresh ?? [];
+    const stored: unknown = fake.storage.session.data['fresh'];
+    return Array.isArray(stored) ? stored.filter((id) => typeof id === 'number') : [];
   }
 
   /** Sorted URLs of the tabs in a window. */
@@ -580,7 +581,7 @@ describe('background', () => {
     test('stale state does not make a tab fresh', async () => {
       fake.createWindow({ urls: [A, B] });
       const stale = fake.tabs[1].id;
-      fake.storage.session.data.fresh = [stale, 9999];
+      fake.storage.session.data['fresh'] = [stale, 9999];
       await fake.settle();
       await start();
       // B is considered fresh (the state says so), but 9999 does not exist.
