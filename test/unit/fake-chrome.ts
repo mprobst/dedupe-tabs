@@ -45,7 +45,12 @@ type FakeTab = {
 };
 type FakeTabSnapshot = FakeTab & { index: number };
 type Listener = { fn: (...args: any[]) => unknown };
-type TabQuery = { active?: boolean; windowId?: number; windowType?: string; url?: string | string[] };
+type TabQuery = {
+  active?: boolean;
+  windowId?: number;
+  windowType?: string;
+  url?: string | string[];
+};
 type LoadOptions = { load?: boolean };
 
 /** A `chrome.*.onSomething` event. */
@@ -63,11 +68,11 @@ class FakeEvent {
   }
 
   removeListener(fn: Listener['fn']) {
-    this.listeners = this.listeners.filter(l => l.fn !== fn);
+    this.listeners = this.listeners.filter((l) => l.fn !== fn);
   }
 
   hasListener(fn: Listener['fn']) {
-    return this.listeners.some(l => l.fn === fn);
+    return this.listeners.some((l) => l.fn === fn);
   }
 
   /** Invokes all current listeners, asynchronously. Arguments are captured now. */
@@ -128,7 +133,10 @@ class FakeStorageArea {
 export function matchesPattern(pattern: string, url: string): boolean {
   if (pattern === '<all_urls>') return /^(https?|file|ftp):/.test(url);
   if (pattern.includes('#')) return false;
-  const re = pattern.split('*').map(s => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*');
+  const re = pattern
+    .split('*')
+    .map((s) => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
+    .join('.*');
   return new RegExp(`^${re}$`).test(url);
 }
 
@@ -163,8 +171,13 @@ export class FakeChrome {
   tabsOnRemoved = new FakeEvent(this);
   tabsOnReplaced = new FakeEvent(this);
   windowsOnCreated = new FakeEvent(this);
-  events: FakeEvent[] = [this.tabsOnCreated, this.tabsOnUpdated, this.tabsOnRemoved, this.tabsOnReplaced,
-    this.windowsOnCreated];
+  events: FakeEvent[] = [
+    this.tabsOnCreated,
+    this.tabsOnUpdated,
+    this.tabsOnRemoved,
+    this.tabsOnReplaced,
+    this.windowsOnCreated,
+  ];
 
   /**
    * The object to install as `globalThis.chrome`. It only implements the
@@ -178,7 +191,8 @@ export class FakeChrome {
       tabs: {
         query: (q?: TabQuery) => this.call(() => this.queryTabs(q)),
         get: (id: number) => this.call(() => this.snapshotTab(this.tab(id))),
-        update: (id: number, props?: { active?: boolean }) => this.call(() => this.updateTab(id, props)),
+        update: (id: number, props?: { active?: boolean }) =>
+          this.call(() => this.updateTab(id, props)),
         remove: (ids: number | number[]) => this.call(() => this.removeTabs([ids].flat())),
         onCreated: this.tabsOnCreated,
         onUpdated: this.tabsOnUpdated,
@@ -188,7 +202,8 @@ export class FakeChrome {
       windows: {
         WINDOW_ID_NONE,
         get: (id: number) => this.call(() => this.snapshotWindow(this.window(id))),
-        update: (id: number, props?: { focused?: boolean }) => this.call(() => this.updateWindow(id, props)),
+        update: (id: number, props?: { focused?: boolean }) =>
+          this.call(() => this.updateWindow(id, props)),
         // Only used by the pre-fix build of the extension.
         remove: (id: number) => this.call(() => this.closeWindow(id)),
         onCreated: this.windowsOnCreated,
@@ -238,7 +253,7 @@ export class FakeChrome {
     setTimeout(() => {
       Promise.resolve()
         .then(fn)
-        .catch(e => this.errors.push(e))
+        .catch((e) => this.errors.push(e))
         .finally(() => this.pending--);
     }, 0);
   }
@@ -248,7 +263,9 @@ export class FakeChrome {
    * settles after `delay` ms. Errors thrown by `fn` become rejections.
    */
   call<T>(fn: () => T, delay = 0): Promise<T> {
-    let result: T | undefined, error: unknown, failed = false;
+    let result: T | undefined,
+      error: unknown,
+      failed = false;
     try {
       result = fn();
     } catch (e) {
@@ -259,7 +276,8 @@ export class FakeChrome {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         this.pending--;
-        if (failed) reject(error); else resolve(result as T);
+        if (failed) reject(error);
+        else resolve(result as T);
       }, delay);
     });
   }
@@ -283,8 +301,9 @@ export class FakeChrome {
     const deadline = Date.now() + 5000;
     let idleRounds = 0;
     while (idleRounds < 2) {
-      if (Date.now() > deadline) throw new Error(`settle() timed out, ${this.pending} calls pending`);
-      await new Promise(resolve => setTimeout(resolve, 0));
+      if (Date.now() > deadline)
+        throw new Error(`settle() timed out, ${this.pending} calls pending`);
+      await new Promise((resolve) => setTimeout(resolve, 0));
       idleRounds = this.pending === 0 ? idleRounds + 1 : 0;
     }
   }
@@ -292,7 +311,7 @@ export class FakeChrome {
   // ---- World lookups ----
 
   tab(id: number): FakeTab {
-    const tab = this.tabs.find(t => t.id === id);
+    const tab = this.tabs.find((t) => t.id === id);
     if (!tab) throw new Error(`No tab with id: ${id}.`);
     return tab;
   }
@@ -304,7 +323,7 @@ export class FakeChrome {
   }
 
   tabsOf(windowId: number): FakeTab[] {
-    return this.tabs.filter(t => t.windowId === windowId);
+    return this.tabs.filter((t) => t.windowId === windowId);
   }
 
   snapshotTab(tab: FakeTab): FakeTabSnapshot {
@@ -319,24 +338,24 @@ export class FakeChrome {
 
   /** The window that has focus, if any. */
   focusedWindow(): FakeWindow | undefined {
-    return [...this.windows.values()].find(w => w.focused);
+    return [...this.windows.values()].find((w) => w.focused);
   }
 
   /** What the user is looking at: the focused window and its active tab, if any. */
   current(): { windowId: number; tabId: number | undefined } | undefined {
     const window = this.focusedWindow();
     if (!window) return undefined;
-    return { windowId: window.id, tabId: this.tabsOf(window.id).find(t => t.active)?.id };
+    return { windowId: window.id, tabId: this.tabsOf(window.id).find((t) => t.active)?.id };
   }
 
   /** Sorted URLs of all tabs (the pending URL for tabs that have not committed yet). */
   urls(): string[] {
-    return this.tabs.map(t => t.url || t.pendingUrl || '').sort();
+    return this.tabs.map((t) => t.url || t.pendingUrl || '').sort();
   }
 
   /** Whether the tab exists. */
   isOpen(tabId: number): boolean {
-    return this.tabs.some(t => t.id === tabId);
+    return this.tabs.some((t) => t.id === tabId);
   }
 
   /** The default window for new tabs: the last focused regular window. */
@@ -352,13 +371,15 @@ export class FakeChrome {
 
   queryTabs(q: TabQuery = {}) {
     const patterns = q.url === undefined ? undefined : [q.url].flat();
-    return this.tabs
-      .filter(t => q.active === undefined || t.active === q.active)
-      .filter(t => q.windowId === undefined || t.windowId === q.windowId)
-      .filter(t => q.windowType === undefined || this.window(t.windowId).type === q.windowType)
-      // Chrome matches patterns against the committed URL only.
-      .filter(t => !patterns || patterns.some(p => matchesPattern(p, t.url)))
-      .map(t => this.snapshotTab(t));
+    return (
+      this.tabs
+        .filter((t) => q.active === undefined || t.active === q.active)
+        .filter((t) => q.windowId === undefined || t.windowId === q.windowId)
+        .filter((t) => q.windowType === undefined || this.window(t.windowId).type === q.windowType)
+        // Chrome matches patterns against the committed URL only.
+        .filter((t) => !patterns || patterns.some((p) => matchesPattern(p, t.url)))
+        .map((t) => this.snapshotTab(t))
+    );
   }
 
   updateTab(id: number, props: { active?: boolean } = {}) {
@@ -381,7 +402,7 @@ export class FakeChrome {
   // ---- State changes that fire events ----
 
   touch(tab: FakeTab) {
-    tab.lastAccessed = (this.clock += 1000);
+    tab.lastAccessed = this.clock += 1000;
   }
 
   /** Makes the tab the active one of its window and marks it accessed. */
@@ -395,7 +416,7 @@ export class FakeChrome {
   focus(windowId: number) {
     this.window(windowId);
     for (const w of this.windows.values()) w.focused = w.id === windowId;
-    this.focusOrder = [windowId, ...this.focusOrder.filter(id => id !== windowId)];
+    this.focusOrder = [windowId, ...this.focusOrder.filter((id) => id !== windowId)];
   }
 
   // ---- Helpers: the user, or the browser, doing things ----
@@ -406,10 +427,19 @@ export class FakeChrome {
    * then load (see the file comment). The first tab is active. By default the
    * window is focused and shows a new tab page.
    */
-  createWindow(
-    { type = 'normal', urls = ['chrome://newtab/'], incognito = false, focused = true, load = true }:
-      { type?: string; urls?: string[]; incognito?: boolean; focused?: boolean; load?: boolean } = {},
-  ): { windowId: number; tabIds: number[] } {
+  createWindow({
+    type = 'normal',
+    urls = ['chrome://newtab/'],
+    incognito = false,
+    focused = true,
+    load = true,
+  }: {
+    type?: string;
+    urls?: string[];
+    incognito?: boolean;
+    focused?: boolean;
+    load?: boolean;
+  } = {}): { windowId: number; tabIds: number[] } {
     const windowId = this.nextWindowId++;
     this.windows.set(windowId, { id: windowId, type, focused: false, incognito });
     this.focusOrder.push(windowId);
@@ -429,16 +459,30 @@ export class FakeChrome {
    */
   openTab(
     url: string,
-    { windowId = this.defaultWindowId(), active = true, load = true }: { windowId?: number; active?: boolean } & LoadOptions = {},
+    {
+      windowId = this.defaultWindowId(),
+      active = true,
+      load = true,
+    }: { windowId?: number; active?: boolean } & LoadOptions = {},
   ): number {
     return this.addTab(windowId, url, { active, load });
   }
 
-  addTab(windowId: number, url: string, { active, load }: { active: boolean; load: boolean }): number {
+  addTab(
+    windowId: number,
+    url: string,
+    { active, load }: { active: boolean; load: boolean },
+  ): number {
     const window = this.window(windowId);
     const tab: FakeTab = {
-      id: this.nextTabId++, windowId, url: '', pendingUrl: url, status: 'loading', active: false,
-      incognito: window.incognito, lastAccessed: 0,
+      id: this.nextTabId++,
+      windowId,
+      url: '',
+      pendingUrl: url,
+      status: 'loading',
+      active: false,
+      incognito: window.incognito,
+      lastAccessed: 0,
     };
     this.tabs.push(tab);
     this.touch(tab);
@@ -476,7 +520,8 @@ export class FakeChrome {
   /** The tab finishes loading: onUpdated({status: 'complete'}) fires. */
   complete(tabId: number) {
     const tab = this.tab(tabId);
-    if (tab.pendingUrl !== undefined) throw new Error(`Tab ${tabId} has not committed its navigation yet`);
+    if (tab.pendingUrl !== undefined)
+      throw new Error(`Tab ${tabId} has not committed its navigation yet`);
     tab.status = 'complete';
     this.tabsOnUpdated.fire(tabId, { status: 'complete' }, this.snapshotTab(tab));
   }
@@ -552,7 +597,7 @@ export class FakeChrome {
       this.tabsOnRemoved.fire(tab.id, { windowId, isWindowClosing: true });
     }
     this.windows.delete(windowId);
-    this.focusOrder = this.focusOrder.filter(id => id !== windowId);
+    this.focusOrder = this.focusOrder.filter((id) => id !== windowId);
     if (window.focused && this.focusOrder.length > 0) this.focus(this.focusOrder[0]);
   }
 }

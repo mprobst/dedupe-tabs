@@ -48,7 +48,9 @@ function setFresh(tabId: TabId, isFresh: boolean) {
   } else {
     freshTabIds.delete(tabId);
   }
-  chrome.storage.session.set({ fresh: [...freshTabIds] }).catch((e) => console.error('saving state failed', e));
+  chrome.storage.session
+    .set({ fresh: [...freshTabIds] })
+    .catch((e) => console.error('saving state failed', e));
 }
 
 /**
@@ -66,7 +68,10 @@ function enqueueTask<T>(task: () => Promise<T>): Promise<T> {
 }
 
 /** Returns an existing tab showing (or loading) `url` that `newTab` duplicates. */
-async function findExisting(newTab: chrome.tabs.Tab, url: string): Promise<chrome.tabs.Tab | undefined> {
+async function findExisting(
+  newTab: chrome.tabs.Tab,
+  url: string,
+): Promise<chrome.tabs.Tab | undefined> {
   // Compare URLs as strings rather than with chrome.tabs.query({url}): that
   // takes match patterns, where "*" is a wildcard and URLs with a #fragment
   // never match.
