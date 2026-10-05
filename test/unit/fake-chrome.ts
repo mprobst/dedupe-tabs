@@ -27,6 +27,8 @@
  * interleave other events, or to fire them right after the worker was woken up.
  */
 
+import { asTuple, type Tuple } from '../tuple.ts';
+
 const WINDOW_ID_NONE = -1;
 
 /** Makes every module evaluation unique, across FakeChrome instances too (ES modules are cached by URL). */
@@ -82,7 +84,9 @@ class FakeEvent {
     for (const listener of this.listeners) {
       this.env.schedule(() => {
         // The worker may have been restarted in the meantime.
-        if (this.listeners.includes(listener)) return listener.fn(...structuredClone(args));
+        return this.listeners.includes(listener)
+          ? listener.fn(...structuredClone(args))
+          : undefined;
       });
     }
   }
@@ -430,26 +434,26 @@ export class FakeChrome {
    * then load (see the file comment). The first tab is active. By default the
    * window is focused and shows a new tab page.
    */
-  createWindow({
+  createWindow<const U extends readonly string[] = readonly [string]>({
     type = 'normal',
-    urls = ['chrome://newtab/'],
+    urls = ['chrome://newtab/'] as readonly string[] as U,
     incognito = false,
     focused = true,
     load = true,
   }: {
     type?: string;
-    urls?: string[];
+    urls?: U;
     incognito?: boolean;
     focused?: boolean;
     load?: boolean;
-  } = {}): { windowId: number; tabIds: number[] } {
+  } = {}): { windowId: number; tabIds: Tuple<number, U['length']> } {
     const windowId = this.nextWindowId++;
     this.windows.set(windowId, { id: windowId, type, focused: false, incognito });
     this.focusOrder.push(windowId);
     if (focused) this.focus(windowId);
     this.windowsOnCreated.fire(this.snapshotWindow(this.window(windowId)));
     const tabIds = urls.map((url, i) => this.addTab(windowId, url, { active: i === 0, load }));
-    return { windowId, tabIds };
+    return { windowId, tabIds: asTuple<number, U['length']>(tabIds, urls.length) };
   }
 
   /**
@@ -590,7 +594,8 @@ export class FakeChrome {
     const i = siblings.indexOf(tab);
     this.tabs.splice(this.tabs.indexOf(tab), 1);
     this.tabsOnRemoved.fire(tabId, { windowId: tab.windowId, isWindowClosing: false });
-    if (tab.active) this.activate(siblings[i + 1] ?? siblings[i - 1]);
+    const neighbour = siblings[i + 1] ?? siblings[i - 1];
+    if (tab.active && neighbour) this.activate(neighbour);
   }
 
   /** Closes a window and its tabs. If it had focus, the previously focused window gets it. */
@@ -602,6 +607,7 @@ export class FakeChrome {
     }
     this.windows.delete(windowId);
     this.focusOrder = this.focusOrder.filter((id) => id !== windowId);
-    if (window.focused && this.focusOrder.length > 0) this.focus(this.focusOrder[0]);
+    const next = this.focusOrder[0];
+    if (window.focused && next !== undefined) this.focus(next);
   }
 }

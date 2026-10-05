@@ -12,20 +12,20 @@ import { afterEach, beforeEach, describe, test } from 'node:test';
 import { pathToFileURL } from 'node:url';
 import { FakeChrome } from './fake-chrome.ts';
 
-const MODULE_URL = process.env.BACKGROUND
-  ? pathToFileURL(resolve(process.env.BACKGROUND)).href
+const MODULE_URL = process.env['BACKGROUND']
+  ? pathToFileURL(resolve(process.env['BACKGROUND'])).href
   : new URL('../../background.js', import.meta.url).href;
 
 // The extension logs a lot; keep the test output readable. Errors it reports
 // are collected, and fail the test.
 const consoleError = console.error;
 let errorSink: unknown[][] = [];
-if (!process.env.DEBUG) console.log = () => {};
+if (!process.env['DEBUG']) console.log = () => {};
 console.error = (...args: unknown[]) => {
   // Node's own warnings (e.g. about the missing "type" in package.json) are not the extension's.
   if (String(args[0]).includes('MODULE_TYPELESS_PACKAGE_JSON')) return;
   errorSink.push(args);
-  if (process.env.DEBUG) consoleError(...args);
+  if (process.env['DEBUG']) consoleError(...args);
 };
 
 const NTP = 'chrome://newtab/';
@@ -579,8 +579,7 @@ describe('background', () => {
     });
 
     test('stale state does not make a tab fresh', async () => {
-      fake.createWindow({ urls: [A, B] });
-      const stale = fake.tabs[1].id;
+      const [, stale] = fake.createWindow({ urls: [A, B] }).tabIds;
       fake.storage.session.data['fresh'] = [stale, 9999];
       await fake.settle();
       await start();

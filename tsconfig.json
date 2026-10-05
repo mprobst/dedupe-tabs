@@ -1,26 +1,29 @@
 {
+  // As strict as TypeScript gets without experimental options; the checks
+  // beyond `strict` follow @tsconfig/strictest.
   "compilerOptions": {
-    // Environment Settings
+    "target": "es2024",
     "module": "esnext",
-    "target": "esnext",
-    "lib": ["esnext", "dom"],
+    // Extension code runs in a service worker: no DOM, no Node.
+    "lib": ["es2024", "webworker"],
     "types": ["chrome"],
-
-    // Other Outputs
     "sourceMap": true,
-    "declaration": true,
-    "declarationMap": true,
 
-    // Stricter Typechecking Options
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-
-    // Recommended Options
     "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
+    "erasableSyntaxOnly": true,
     "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
     "skipLibCheck": true
   },
   "include": ["background.ts"]
