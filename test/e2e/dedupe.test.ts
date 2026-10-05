@@ -59,7 +59,7 @@ const test = extensionTest('background.js').extend<
 });
 
 test.describe('dedupe-tabs', () => {
-  const reason = skipReason();
+  const reason = skipReason({ keyPresses: false });
   test.skip(reason !== undefined, reason);
 
   test('opening an already open URL switches to the existing tab', async ({
